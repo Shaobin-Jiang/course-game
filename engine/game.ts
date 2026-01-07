@@ -206,6 +206,9 @@ export class Game {
 
     private global_callbacks: Map<string, EventListener> = new Map();
 
+    private retry_count: Map<string, number> = new Map();
+    private retry_limit: number = 3;
+
     // Assets
     private button_background: HTMLImageElement | null;
     private object_select_grid: HTMLImageElement | null;
@@ -742,10 +745,31 @@ export class Game {
                                 scene: Math.floor(scene_id) + 0.5,
                             };
 
+                            let index: string = `${session_id}-${level_id}-${scene_id}`;
+                            let retry: number;
+                            if (!this.retry_count.has(index)) {
+                                this.retry_count.set(index, 0);
+                                retry = 0;
+                            } else {
+                                retry = this.retry_count.get(index);
+                            }
+
                             this.update_progress(progress, layout).then(() => {
-                                this.alert('太遗憾了，你的操作是错误的！<br>回到文献中再看看吧！', () => {
-                                    this.read_paper(session_id, level_id, 20);
-                                });
+                                retry += 1;
+                                if (retry < this.retry_limit) {
+                                    this.retry_count.set(index, retry);
+                                    this.alert(
+                                        `太遗憾了，你的操作是错误的！<br>你还有${this.retry_limit - retry}次尝试机会！`,
+                                        () => {
+                                            this.play_scene(session_id, level_id, scene_id);
+                                        }
+                                    );
+                                } else {
+                                    this.retry_count.set(index, 0);
+                                    this.alert('太遗憾了，你的操作是错误的！<br>回到文献中再看看吧！', () => {
+                                        this.read_paper(session_id, level_id, 20);
+                                    });
+                                }
                             });
                         }
                     }
