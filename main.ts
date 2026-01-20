@@ -1,6 +1,7 @@
 import {Course, Game} from './engine/game';
 import {Rect} from './engine/geometry';
 import {loadImage, Loading, BrowserValidator} from './engine/util';
+import {easter_egg} from './engine/easter-egg';
 
 async function main(): Promise<void> {
     let browser_validator = new BrowserValidator([
@@ -30,7 +31,6 @@ async function main(): Promise<void> {
     for (let item of window.sessions) {
         sessions.push({position: new Rect(...item.position), get: item.get, name: item.name});
     }
-    window.sessions = [];
 
     let course: Course = {
         map,
@@ -41,6 +41,8 @@ async function main(): Promise<void> {
 
     let game: Game = new Game(course);
     game.about_text = window.about_text;
+    easter_egg(game);
+    window.sessions = [];
     await game.start();
 }
 
